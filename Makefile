@@ -2,16 +2,18 @@ CC = i686-linux-gnu-gcc
 CFLAGS = -std=gnu99 -ffreestanding -O2 -Wall -Wextra -fno-pie -fno-stack-protector
 LDFLAGS = -T linker.ld -ffreestanding -O2 -nostdlib -no-pie -Wl,--no-warn-rwx-segments
 
+OBJS = boot.o kernel.o vga.o
+
 all: kernel.elf
 
 boot.o: boot.asm
-	nasm -f elf32 boot.asm -o boot.o
+	nasm -f elf32 $< -o $@
 
-kernel.o: kernel.c
-	$(CC) -c kernel.c -o kernel.o $(CFLAGS)
+%.o: %.c vga.h
+	$(CC) -c $< -o $@ $(CFLAGS)
 
-kernel.elf: boot.o kernel.o linker.ld
-	$(CC) $(LDFLAGS) -o kernel.elf boot.o kernel.o
+kernel.elf: $(OBJS) linker.ld
+	$(CC) $(LDFLAGS) -o $@ $(OBJS)
 
 run: kernel.elf
 	qemu-system-i386 -kernel kernel.elf

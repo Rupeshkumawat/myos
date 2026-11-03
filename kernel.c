@@ -1,11 +1,26 @@
+#include "vga.h"
+
 void kernel_main(void) {
-    volatile unsigned short *vga = (volatile unsigned short *)0xB8000;
-    const char *msg = "Hello from my own OS!";
+    vga_clear();
 
-    for (int i = 0; i < 80 * 25; i++)
-        vga[i] = (0x0F << 8) | ' ';
+    vga_set_color(VGA_LIGHT_GREEN, VGA_BLACK);
+    vga_puts("Hello from my own OS!\n");
 
-    for (int i = 0; msg[i] != '\0'; i++)
-        vga[i] = (0x0F << 8) | msg[i];
+    vga_set_color(VGA_WHITE, VGA_BLACK);
+    vga_puts("Screen driver online.\n\n");
+
+    vga_puts("Decimal: ");  vga_put_dec(12345);       vga_putc('\n');
+    vga_puts("Negative: "); vga_put_dec(-42);         vga_putc('\n');
+    vga_puts("Hex: ");      vga_put_hex(0xDEADBEEF);  vga_putc('\n');
+    vga_putc('\n');
+
+    vga_set_color(VGA_YELLOW, VGA_BLACK);
+    for (int i = 1; i <= 30; i++) {
+        vga_puts("Scroll test line ");
+        vga_put_dec(i);
+        vga_putc('\n');
+    }
+
+    vga_set_color(VGA_LIGHT_CYAN, VGA_BLACK);
+    vga_puts("Done. Kernel idle.");
 }
-
