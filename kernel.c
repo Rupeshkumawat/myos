@@ -1,26 +1,31 @@
+#include <stdint.h>
 #include "vga.h"
+#include "gdt.h"
+#include "interrupts.h"
 
 void kernel_main(void) {
     vga_clear();
 
     vga_set_color(VGA_LIGHT_GREEN, VGA_BLACK);
     vga_puts("Hello from my own OS!\n");
-
     vga_set_color(VGA_WHITE, VGA_BLACK);
-    vga_puts("Screen driver online.\n\n");
 
-    vga_puts("Decimal: ");  vga_put_dec(12345);       vga_putc('\n');
-    vga_puts("Negative: "); vga_put_dec(-42);         vga_putc('\n');
-    vga_puts("Hex: ");      vga_put_hex(0xDEADBEEF);  vga_putc('\n');
-    vga_putc('\n');
+    gdt_init();      vga_puts("[ok] GDT loaded\n");
+    idt_init();      vga_puts("[ok] IDT loaded\n");
+    pic_remap();     vga_puts("[ok] PIC remapped\n");
+    timer_init(100); vga_puts("[ok] Timer at 100 Hz\n\n");
 
-    vga_set_color(VGA_YELLOW, VGA_BLACK);
-    for (int i = 1; i <= 30; i++) {
-        vga_puts("Scroll test line ");
-        vga_put_dec(i);
-        vga_putc('\n');
+    __asm__ volatile ("sti");   /* turn interrupts on */
+
+    uint32_t last = 0;
+    for (;;) {
+        uint32_t seconds = timer_ticks() / 100;
+        if (seconds != last) {
+            last = seconds;
+            vga_puts("Uptime: ");
+            vga_put_dec((int)seconds);
+            vga_puts(" s\n");
+        }
+        __asm__ volatile ("hlt");   /* sleep until the next interrupt */
     }
-
-    vga_set_color(VGA_LIGHT_CYAN, VGA_BLACK);
-    vga_puts("Done. Kernel idle.");
 }

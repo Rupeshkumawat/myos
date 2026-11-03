@@ -2,14 +2,14 @@ CC = i686-linux-gnu-gcc
 CFLAGS = -std=gnu99 -ffreestanding -O2 -Wall -Wextra -fno-pie -fno-stack-protector
 LDFLAGS = -T linker.ld -ffreestanding -O2 -nostdlib -no-pie -Wl,--no-warn-rwx-segments
 
-OBJS = boot.o kernel.o vga.o
+OBJS = boot.o stubs.o kernel.o vga.o gdt.o interrupts.o
 
 all: kernel.elf
 
-boot.o: boot.asm
+%.o: %.asm
 	nasm -f elf32 $< -o $@
 
-%.o: %.c vga.h
+%.o: %.c $(wildcard *.h)
 	$(CC) -c $< -o $@ $(CFLAGS)
 
 kernel.elf: $(OBJS) linker.ld
